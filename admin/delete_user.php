@@ -1,61 +1,69 @@
 <?php
-require 'config/database.php';
+session_start();
+require_once __DIR__ . '/../config/database.php';
 
-if(isset($_GET['id'])) {
-    $id = filter_var($_GET['id'], FILTER_SANITIZE_NUMBER_INT);
-
-
-    //FETCH USER FROM DATABASE
-    $query = "SELECT * FROM users WHERE id=$id";
-    $result = mysqli_query($connection, $query);
-    $user = mysqli_fetch_assoc($result);
-
-
-    //MAKE SURE TO GET BACK ONLY ONE USER
-
-    if(mysqli_num_rows($result) == 1){
-        $avatar_name = $user['avatar'];
-        $avatar_path = '../images/' . $avatar_name;
-
-        //DELETE IMAGE IF AVAILABLE
-        if($avatar_path) {
-            unlink($avatar_path);
-        }
-    }
-
-    //FOR LATER
-    //FETCH ALL THUMBNAILS OF USER'S POSTS AND DELETE THEM
-    $thumbnails_query = "SELECT thumbnail FROM posts WHERE author_id=$id";
-    $thumbnails_result = mysqli_query($connection, $thumbnails_query);
-    if (mysqli_num_rows($thumbnails_result) > 0) {
-        while ($thumbnail = mysqli_fetch_assoc($thumbnails_result)) {
-            $thumbnail_path = '../images/' . $thumbnail['thumbnail'];
-
-            //DELETE THUMBNAIL FROM IMAGES FOLDER IF IT EXISTS
-            if ($thumbnail_path) {
-                unlink($thumbnail_path);
-            }
-        }
-    }
-    
-
-
-
-    //DELETE USER FROM DATABASE
-    $delete_user_query = "DELETE FROM users WHERE id=$id";
-    $delete_user_result = mysqli_query($connection, $delete_user_query);
-    if(mysqli_errno($connection)) {
-        $_SESSION['delete-user'] = "Could'nt delete user {$user['firstname']} 
-        {$user['lastname']} ";
-    } else {
-        $_SESSION['delete-user-success'] = "{$user['firstname']} 
-        {$user['lastname']} deleted successfully. ";
-    }
-
+// Admin-only protection
+if (!isset($_SESSION['user-id']) || !isset($_SESSION['user_is_admin'])) {
+    header('Location: ' . ROOT_URL . 'signin.php');
+    exit;
 }
 
-header('location: ' . ROOT_URL . 'admin/manage_users.php');
-die();
+// Validate ID
+if (!isset($_GET['id']) || !ctype_digit($_GET['id'])) {
+    header('Location: ' . ROOT_URL . 'admin/manage_users.php');
+    exit;
+}
 
+$id = (int) $_GET['id'];
 
+// Prevent deleting your own admin account
+if ($id === (int) $_SESSION['user-id']) {
+    $_SESSION['delete-user-error'] = "You cannot delete your own account.";
+    header('Location: ' . ROOT_URL . 'admin/manage_users.php');
+    exit;
+}
+
+/* Fetch user securely */
+$stmt = $connection->prepare("SELECT firstname, lastname, avatar FROM users WHERE id = ? LIMIT 1");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+
+if (!$user) {
+    $_SESSION['delete-user-error'] = "User not found.";
+    header('Location: ' . ROOT_URL . 'admin/manage_users.php');
+    exit;
+}
+
+/* Delete user avatar */
+$avatar_path = __DIR__ . '/../images/' . $user['avatar'];
+if (is_file($avatar_path)) {
+    unlink($avatar_path);
+}
+
+/* Delete user's post thumbnails */
+$stmt = $connection->prepare("SELECT thumbnail FROM posts WHERE author_id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$thumbs = $stmt->get_result();
+
+while ($thumb = $thumbs->fetch_assoc()) {
+    $thumb_path = __DIR__ . '/../images/' . $thumb['thumbnail'];
+    if (is_file($thumb_path)) {
+        unlink($thumb_path);
+    }
+}
+
+/* Delete user record */
+$stmt = $connection->prepare("DELETE FROM users WHERE id = ? LIMIT 1");
+$stmt->bind_param("i", $id);
+
+if ($stmt->execute()) {
+    $_SESSION['delete-user-success'] = "{$user['firstname']} {$user['lastname']} deleted successfully.";
+} else {
+    $_SESSION['delete-user-error'] = "Failed to delete user.";
+}
+
+header('Location: ' . ROOT_URL . 'admin/manage_users.php');
+exit;
 ?>
