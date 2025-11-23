@@ -1,60 +1,60 @@
 <?php
 session_start();
-require 'config/database.php';
+require_once __DIR__ . '/config/database.php';
 
-if(isset($_POST['submit'])) {
-    //GET THE FORM DATA
-    $username_email = filter_var($_POST['username_email'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    $password = filter_var($_POST['password'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    if(!$username_email){
-     //IF EMPTY
-     $_SESSION['signin'] = "Username or Email Required!";
-    } elseif(!$password) {
-        $_SESSION['signin'] = "Password Required!"; 
+    $username_email = trim($_POST['username_email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    // Basic validation
+    if ($username_email === '') {
+        $_SESSION['signin-error'] = "Username or Email is required.";
+    } elseif ($password === '') {
+        $_SESSION['signin-error'] = "Password is required.";
     } else {
-        //FETCH USER FROM DATABASE
-        $fetch_user_query = "SELECT * FROM users WHERE username='$username_email' OR email='$username_email'";
-        $fetch_user_result = mysqli_query($connection, $fetch_user_query);
+        // Prepare safe query
+        $stmt = $connection->prepare(
+            "SELECT id, username, email, password, is_admin FROM users WHERE username = ? OR email = ? LIMIT 1"
+        );
+        $stmt->bind_param("ss", $username_email, $username_email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        //IF INPUT MATCH WITH DATABASE
-        if(mysqli_num_rows($fetch_user_result) == 1){
+        // User found
+        if ($result->num_rows === 1) {
+            $user = $result->fetch_assoc();
 
-             //CONVERT RECORD INTO ASSOCIATIVE ARRAY
-             $user_record = mysqli_fetch_assoc($fetch_user_result);
-             $db_password = $user_record['password']; //get hashed password
-             
-             // COMPARE FORM PASSWORD WITH DATABASE PASSWORD
-             if(password_verify($password, $db_password)){
-                //SET SESSION FOR ACCESS CONTROL
-                $_SESSION['user-id'] = $user_record['id'];
-                //SET SESSION IF USER IS AN ADMIN
-                if($user_record['is_admin'] == 1)  {
+            if (password_verify($password, $user['password'])) {
+                // Regenerate session ID for security
+                session_regenerate_id(true);
+
+                $_SESSION['user-id'] = $user['id'];
+
+                if ((int)$user['is_admin'] === 1) {
                     $_SESSION['user_is_admin'] = true;
                 }
 
-                //log user in
-                header('location: ' . ROOT_URL . 'admin/');
-             }else {
-                //IF PASSWORD DO NOT MATCH
-                $_SESSION['signin'] = "Please check your input"; 
+                header("Location: " . ROOT_URL . "admin/index.php");
+                exit;
+
+            } else {
+                $_SESSION['signin-error'] = "Incorrect credentials. Please try again.";
             }
 
-        }else {
-            //IF USER NOT FOUND IN THE DATABASE
-            $_SESSION['signin'] = "Oops! User not found"; 
+        } else {
+            $_SESSION['signin-error'] = "User not found.";
         }
     }
 
-    //IF ERROR OCCURRED IN ANY PROCESS
-    if(isset($_SESSION['signin'])) {
-        $_SESSION['signin-data'] = $_POST;
-        header('location: ' . ROOT_URL . 'signin.php');
-        die();
-    }
-} else {
-    header('location: ' . ROOT_URL . 'signin.php');
-    die();
+    // Save old form input
+    $_SESSION['signin-data'] = $_POST;
+
+    header("Location: " . ROOT_URL . "signin.php");
+    exit;
 }
 
+// If accessed directly
+header("Location: " . ROOT_URL . "signin.php");
+exit;
 ?>

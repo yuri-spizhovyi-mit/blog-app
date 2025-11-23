@@ -1,105 +1,140 @@
 <?php
 session_start();
-require 'config/database.php';
+require_once __DIR__ . '/config/database.php';
 
-//GET SIGNUP FORM DATA WHEN SIGN UP BUTTON CLICKED
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-if(isset($_POST['submit'])) {
-   $firstname = filter_var($_POST['firstname'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-   $lastname = filter_var($_POST['lastname'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-   $username = filter_var($_POST['username'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-   $email = filter_var($_POST['email'], FILTER_VALIDATE_EMAIL);
-   $createpassword = filter_var($_POST['createpassword'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-   $confirmpassword = filter_var($_POST['confirmpassword'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-   $avatar = $_FILES['avatar'];
+    /* ================================
+       1. SANITIZE INPUTS
+    ================================= */
+    $firstname       = trim($_POST['firstname'] ?? '');
+    $lastname        = trim($_POST['lastname'] ?? '');
+    $username        = trim($_POST['username'] ?? '');
+    $email           = trim($_POST['email'] ?? '');
+    $createpassword  = $_POST['createpassword'] ?? '';
+    $confirmpassword = $_POST['confirmpassword'] ?? '';
+    $avatar          = $_FILES['avatar'] ?? null;
 
-   //VALIDATE INPUTS
-   if(!$firstname) {
-    $_SESSION['signup'] = "Please enter your First Name";
-   } elseif(!$lastname) {
-    $_SESSION['signup'] = "Please enter your Last Name";
-   } elseif(!$username) {
-    $_SESSION['signup'] = "Please enter your Username";
-   } elseif(!$email) {
-    $_SESSION['signup'] = "Please enter a valid email address";
-   } elseif(strlen($createpassword) < 8 || strlen($confirmpassword)
-    < 8) {
-    $_SESSION['signup'] = "Password should be 8+ characters";
-   } elseif(!$avatar['name']) {
-    $_SESSION['signup'] = "Please add an avatar";
-   } else {
-    //CHECK IF PASSWORDS DON'T MATCH
-    if($createpassword !== $confirmpassword) {
-        $_SESSION['signup'] = "Passwords do not match!";
-    }else {
-        // IF MATCHED THEN HASH PASSWORD
-        $hashed_password = password_hash($createpassword,
-        PASSWORD_DEFAULT);
-
-        //CHECK IF USERNAME OR EMAIL ALREADY EXIST IN DATABASE
-      $user_check_query = "SELECT * FROM users WHERE username='$username' OR email='$email'";
-      $user_check_result = mysqli_query($connection, $user_check_query);
-     if(mysqli_num_rows($user_check_result) > 0) {
-        $_SESSION['signup'] = "Username or email already exist";
-     } else {
-
-        //WORK ON AVATAR USING UNIQUE ELEMENT
-        //RENAME AVATAR
-
-        $time = time(); //make image unique
-        $avatar_name = $time . $avatar['name'];
-        $avatar_tmp_name = $avatar['tmp_name'];
-        $avatar_destination_path = 'images/' . $avatar_name;
-
-        //make sure file is an image
-
-        $allowed_files = ['png', 'jpg', 'jpeg'];
-        $extention = explode('.', $avatar_name);
-        $extention = end($extention); // to get the end of the array from the image
-        if(in_array($extention, $allowed_files)) {
-            //to make sure image is not too large(1mb)
-            if($avatar['size'] < 1000000) {
-                //Upload avatar
-                move_uploaded_file($avatar_tmp_name, $avatar_destination_path);
-
-
-            }else {
-                $_SESSION['signup'] = "File size too big.
-                Must be less than 1mb";
-            } 
-        } else {
-            $_SESSION['signup'] = "File MUST  be png, jpg, jpeg";
-        }
-     }
+    /* ================================
+       2. VALIDATION
+    ================================= */
+    if ($firstname === '') {
+        $_SESSION['signup-error'] = "Please enter your first name.";
+    } elseif ($lastname === '') {
+        $_SESSION['signup-error'] = "Please enter your last name.";
+    } elseif ($username === '') {
+        $_SESSION['signup-error'] = "Please choose a username.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['signup-error'] = "Please enter a valid email address.";
+    } elseif (strlen($createpassword) < 6) {
+        $_SESSION['signup-error'] = "Password must be at least 6 characters.";
+    } elseif ($createpassword !== $confirmpassword) {
+        $_SESSION['signup-error'] = "Passwords do not match.";
+    } elseif (!$avatar || !$avatar['name']) {
+        $_SESSION['signup-error'] = "Please upload a profile image.";
     }
-   }
-   //REDIRECT BACK TO SIGNUP PAGE IF ANY REQUIREMENT NOT MET
 
-   if(isset($_SESSION['signup'])) {
-    // Pass form data back to signup page
-    $_SESSION['signup-data'] = $_POST;
-    header('location: ' . ROOT_URL . 'signup.php');
-    die();
+    /* If any validation failed → redirect */
+    if (isset($_SESSION['signup-error'])) {
+        $_SESSION['signup-data'] = [
+            'firstname' => $firstname,
+            'lastname'  => $lastname,
+            'username'  => $username,
+            'email'     => $email
+        ];
 
+        header("Location: " . ROOT_URL . "signup.php");
+        exit;
+    }
+
+    /* ================================
+       3. CHECK UNIQUE USERNAME/EMAIL
+    ================================= */
+    $stmt = $connection->prepare(
+        "SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1"
+    );
+    $stmt->bind_param("ss", $username, $email);
+    $stmt->execute();
+    $exists = $stmt->get_result();
+
+    if ($exists->num_rows > 0) {
+        $_SESSION['signup-error'] = "Username or email already exists.";
+        $_SESSION['signup-data'] = $_POST;
+
+        header("Location: " . ROOT_URL . "signup.php");
+        exit;
+    }
+
+    /* ================================
+       4. VALIDATE & SAVE AVATAR
+    ================================= */
+    $allowed_ext = ['jpg', 'jpeg', 'png'];
+    $ext = strtolower(pathinfo($avatar['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($ext, $allowed_ext)) {
+        $_SESSION['signup-error'] = "Avatar must be a JPG, JPEG, or PNG file.";
+        $_SESSION['signup-data'] = $_POST;
+
+        header("Location: " . ROOT_URL . "signup.php");
+        exit;
+    }
+
+    if ($avatar['size'] > 2 * 1024 * 1024) { // 2MB limit
+        $_SESSION['signup-error'] = "Avatar file must be less than 2MB.";
+        $_SESSION['signup-data'] = $_POST;
+
+        header("Location: " . ROOT_URL . "signup.php");
+        exit;
+    }
+
+    // Unique file name
+    $new_filename = time() . "_" . bin2hex(random_bytes(4)) . "." . $ext;
+    $upload_path = __DIR__ . "/images/" . $new_filename;
+
+    if (!move_uploaded_file($avatar['tmp_name'], $upload_path)) {
+        $_SESSION['signup-error'] = "Failed to upload avatar. Try again.";
+        $_SESSION['signup-data'] = $_POST;
+
+        header("Location: " . ROOT_URL . "signup.php");
+        exit;
+    }
+
+    /* ================================
+       5. HASH PASSWORD
+    ================================= */
+    $hashed_password = password_hash($createpassword, PASSWORD_DEFAULT);
+
+    /* ================================
+       6. INSERT USER INTO DATABASE
+    ================================= */
+    $stmt = $connection->prepare(
+        "INSERT INTO users (firstname, lastname, username, email, password, avatar, is_admin)
+         VALUES (?, ?, ?, ?, ?, ?, 0)"
+    );
+    $stmt->bind_param(
+        "ssssss",
+        $firstname,
+        $lastname,
+        $username,
+        $email,
+        $hashed_password,
+        $new_filename
+    );
+
+    if ($stmt->execute()) {
+        $_SESSION['signup-success'] = "Registration successful. Please sign in.";
+        header("Location: " . ROOT_URL . "signin.php");
+        exit;
     } else {
-        //insert new user into users table
-        $insert_user_query = "INSERT INTO users (firstname, lastname, username, email, password, 
-        avatar, is_admin) VALUES('$firstname', '$lastname', '$username', '$email', '$hashed_password', '$avatar_name', 0)";
-        //$insert_user_query = "INSERT INTO users firstname='$firstname', lastname='$lastname', username='$username', email='$email', 
-        //password='$hashed_password', avatar='$avatar_name', is_admin=0 ";  THIS CAN BE USED TOO
-        $insert_user_result = mysqli_query($connection, $insert_user_query);
+        $_SESSION['signup-error'] = "Registration failed. Try again.";
+        $_SESSION['signup-data'] = $_POST;
 
-        if(!mysqli_errno($connection)) {
-            // REDIRECT TO LOGIN PAGE WITH SUCCESS MESSAGE
-
-            $_SESSION['signup-success'] = "Registration Successful. Please Log In!";
-            header('location: ' . ROOT_URL . 'signin.php');
-            die();
-        }
+        header("Location: " . ROOT_URL . "signup.php");
+        exit;
     }
-    
-}else {
-        //WHEN SIGNUP FORM BUTTON NOT CLICKED
-   header('location: ' . ROOT_URL . 'signup.php');
-   die();
+
+} else {
+    header("Location: " . ROOT_URL . "signup.php");
+    exit;
 }
+?>
