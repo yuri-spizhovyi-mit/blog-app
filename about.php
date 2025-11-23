@@ -1,25 +1,9 @@
 <?php
-include 'partials/header.php';
-
+require_once __DIR__ . '/partials/header.php';
 ?>
-
-<!-------ABOUT STARTS---------->
-
-
 <section class="empty_page">
     <h1>About Page</h1>
 </section>
-
-<!-------ABOUT ENDS---------->
-
-
-
-
-
-
-
-
 <?php
-include 'partials/footer.php';
-
+require_once __DIR__ . '/partials/footer.php';
 ?>
