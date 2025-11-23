@@ -1,13 +1,11 @@
 <?php
+// Load application constants
+require_once __DIR__ . '/constants.php';
 
-require 'config/constants.php';
-
-//CONNECT TO THE DATABASE
-
+// Establish MySQLi connection
 $connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
-//CHECK IF THERE  IS ERROR
-
-if(mysqli_errno($connection)) {
-    die(mysqli_error($connection));
+// Check for connection errors
+if ($connection->connect_errno) {
+    die('Database connection failed: ' . $connection->connect_error);
 }
