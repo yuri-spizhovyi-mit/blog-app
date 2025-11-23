@@ -1,10 +1,8 @@
 <?php
+session_start();
 
-session_start(); //Because session is used
-
-define('ROOT_URL', 'http://localhost/blog/');
+define('ROOT_URL', 'http://localhost/blog-app/'); 
 define('DB_HOST', 'localhost');
-define('DB_USER', 'Sena');
-define('DB_PASS', 'ADMIN0002');
-define('DB_NAME', 'myblog');
-
+define('DB_USER', 'root');        // XAMPP default
+define('DB_PASS', '');            // XAMPP default
+define('DB_NAME', 'blog_app');    // Use THIS! not myblog
