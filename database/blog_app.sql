@@ -1,11 +1,11 @@
 -- -----------------------------------------------------
 -- DATABASE: blog_app
 -- -----------------------------------------------------
-CREATE DATABASE IF NOT EXISTS blog_app
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+-- CREATE DATABASE IF NOT EXISTS blog_app
+--   CHARACTER SET utf8mb4
+--   COLLATE utf8mb4_unicode_ci;
 
-USE blog_app;
+-- USE blog_app;
 
 -- -----------------------------------------------------
 -- USERS TABLE

@@ -1,0 +1,45 @@
+# ---------------------------------------------------------
+#  PHP BLOG APP — GITIGNORE
+# ---------------------------------------------------------
+
+# Avoid uploading secret credentials
+config/constants.php
+admin/config/constants.php
+
+# Sample placeholder (safe to track)
+!config/constants.example.php
+
+# Ignore OS junk
+.DS_Store
+Thumbs.db
+
+# Ignore cache / temporary folders
+cache/
+tmp/
+temp/
+logs/
+
+# Ignore uploaded images (InfinityFree FULL public folder)
+images/*
+!images/default.png       # keep default avatar if needed
+
+# Ignore vendor folder (if you ever install composer)
+vendor/
+
+# Ignore environment-specific files
+.env
+.env.local
+.env.production
+
+# Ignore node_modules (if your project includes scripts)
+node_modules/
+
+# Ignore XAMPP or local server configs
+*.sql~
+*.bak
+*.swp
+
+# Ignore IDE configs
+.vscode/
+.idea/
+*.iml
