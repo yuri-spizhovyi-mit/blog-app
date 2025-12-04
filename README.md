@@ -19,23 +19,6 @@ This project was developed as part of **Project 4: Simple Social Media Platform*
 
 ---
 
-### ⭐ Advanced Features (A‑Grade Requirements)
-
-#### 1. Follow System
-- Follow/unfollow users  
-- Personalized feed with followed users' posts  
-- Follow/Unfollow button on profile pages  
-- Follower/following counters  
-
-#### 2. Likes & Comments
-- Like/unlike posts  
-- Dynamic like counter  
-- Comment under posts  
-- Comments show avatar, author name, timestamp  
-- Secure server-side validation  
-
----
-
 ## 🛠️ Administrator Panel
 - Secure admin-only control panel  
 - Manage posts, categories, and users  
