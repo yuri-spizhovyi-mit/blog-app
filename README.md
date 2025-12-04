@@ -1,59 +1,132 @@
-# CRUD Blog Application with Administrator Panel
+# Blog App — Simple Social Media Platform 
 
-A fully functioning responsive CRUD Blog Application with an Administrator Panel/Dashboard built using PHP and MySQL. This project includes a robust user registration and login system with access control. Users can create, update, and delete posts, manage users, and handle categories effortlessly.
+A fully functional **social blogging platform** built using **PHP**, **MySQL**, and custom MVC-style architecture.  
+Users can register, create posts, like posts, comment, follow other users, explore a personalized feed, and manage content through an integrated admin panel.
 
-## Features
+This project was developed as part of **Project 4: Simple Social Media Platform**, satisfying all core requirements and advanced features (Follow System + Likes & Comments).
 
-- User registration and login system with access control.
-- CRUD operations for posts, users, and categories.
-- Administrator panel/dashboard for managing application data.
-- Responsive design for optimal viewing on various devices.
-- Responsive
+---
 
-## Usage
+## 🚀 Features
 
-1. Set up a MySQL database and update the database configuration in `config.php`.
-2. Import the provided SQL file (`database.sql`) to create the necessary tables.
-3. Run the application on a PHP server.
-4. Register as a user or log in as an administrator.
-5. Access the administrator panel to manage posts, users, and categories.
-6. Create, update, and delete posts with ease.
+### ✅ Core Functionality
+- User registration and authentication  
+- User profiles with avatar + bio  
+- Create, edit, and delete posts  
+- Public feed with all posts sorted by newest  
+- Session-based navigation (Login, Logout, Profile)  
+- Category filtering and author information  
 
-## Screenshots
+---
 
-![Homepage](/screenshots/frontpage.png)
-*Screenshot: Homepage showcasing blog posts.*
+### ⭐ Advanced Features (A‑Grade Requirements)
 
-![Blog page](/screenshots/blog-page.png)
-*Screenshot: Blog page with search integration.*
-![Singlepost page](/screenshots/singlepost-page.png)
-![category page](/screenshots/category-page.png)
+#### 1. Follow System
+- Follow/unfollow users  
+- Personalized feed with followed users' posts  
+- Follow/Unfollow button on profile pages  
+- Follower/following counters  
 
-![Login Page](/screenshots/Login-page.png)
-![Signup Page](/screenshots/Sign-up-page.png)
+#### 2. Likes & Comments
+- Like/unlike posts  
+- Dynamic like counter  
+- Comment under posts  
+- Comments show avatar, author name, timestamp  
+- Secure server-side validation  
 
-![Admin Dashboard](/screenshots/add-category.png)
-![Admin Dashboard](/screenshots/add-post.png)
-![Admin Dashboard](/screenshots/add-user.png)
-![Admin Dashboard](/screenshots/manage-categories.png)
-![Admin Dashboard](/screenshots/manage-posts.png)
-![Admin Dashboard](/screenshots/manage-users.png)
-*Screenshot: Administrator panel for managing posts, users, and categories.*
+---
 
-![Mobile View](/screenshots/mobile-view-frontpage.png)
-![Mobile View](/screenshots/mobile-view-menu.png)
-![Mobile View](/screenshots/mobile-view-blog-search.png)
-*Screenshot: Responsive view.*
+## 🛠️ Administrator Panel
+- Secure admin-only control panel  
+- Manage posts, categories, and users  
+- CRUD operations for all entities  
+- Review/delete inappropriate content  
+- Dashboard analytics  
 
-## Technologies Used
+---
 
-- PHP
-- MySQL
-- CSS
-- JAVASCRIPT
-- DATABASE
+## 📦 Installation
 
-## License
+### 1. Clone the repository
+```bash
+git clone https://github.com/SpizhovyiMaxDev/blog-app.git
+```
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+### 2. Move the project into XAMPP
+```
+C:/xampp/htdocs/blog-app/
+```
 
+### 3. Create database
+- Open phpMyAdmin  
+- Create database: `blog_app`  
+- Import `database/blog_app.sql`
+
+### 4. Configure environment
+Edit `config/database.php`:
+```php
+$connection = new mysqli("localhost", "root", "", "blog_app");
+```
+
+### 5. Run locally
+Start Apache & MySQL in XAMPP:  
+```
+http://localhost/blog-app/
+```
+
+---
+
+## 🧱 Project Structure
+```
+blog-app/
+│── admin/           # Admin dashboard
+│── config/          # Database connection
+│── images/          # Uploaded images
+│── partials/        # Header, footer, nav
+│── js/              # Optional frontend scripts
+│── css/             # Styles
+│── follow.php       # Follow system
+│── unfollow.php
+│── like_post.php    # Likes
+│── unlike_post.php
+│── comment_post.php # Comment submission
+│── post.php         # Post display
+│── index.php        # Feed
+```
+
+---
+
+## 🧪 Requirements Implemented
+
+### ✔ Required (Core)
+- Authentication  
+- Post creation  
+- Public feed  
+- User sessions  
+- Post deletion  
+- Profile pages  
+
+### ✔ Advanced (for A‑grade)
+- Follow System  
+- Likes  
+- Comments  
+
+---
+
+## 🔧 Technologies Used
+- **PHP (Procedural + MVC‑style modules)**  
+- **MySQL**  
+- **HTML5 / CSS3**  
+- **JavaScript**  
+- **XAMPP / Apache**  
+
+---
+
+## 📄 License
+Open for educational and portfolio use.
+
+---
+
+## 👤 Author
+**Max Spizhovyi**  
+GitHub: https://github.com/SpizhovyiMaxDev
