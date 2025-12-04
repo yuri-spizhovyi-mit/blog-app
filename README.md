@@ -32,7 +32,8 @@ This project was developed as part of **Project 4: Simple Social Media Platform*
 
 ### 1. Clone the repository
 ```bash
-[git clone (https://github.com/yuri-spizhovyi-mit/blog-app.git)]
+git clone https://github.com/yuri-spizhovyi-mit/blog-app.git
+```
 
 ### 2. Move the project into XAMPP
 ```
