@@ -104,12 +104,7 @@ blog-app/
 - Public feed  
 - User sessions  
 - Post deletion  
-- Profile pages  
-
-### ✔ Advanced (for A‑grade)
-- Follow System  
-- Likes  
-- Comments  
+- Profile pages    
 
 ---
 
